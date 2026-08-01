@@ -1,0 +1,19 @@
+{
+  "name": "taskflow-platform",
+  "version": "1.0.0",
+  "description": "Task Automation & Job Processing Platform - Saarthi AI Technical Assessment",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:backend": "npm run build --prefix backend",
+    "build:frontend": "npm run build --prefix frontend",
+    "test:backend": "npm test --prefix backend",
+    "docker:up": "docker-compose up --build -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
