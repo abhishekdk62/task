@@ -6,9 +6,9 @@ import { logger } from '../config/logger';
 
 const router = Router();
 
-router.get('/health', async (_req: Request, res: Response) => {
+router.get('/health', async (_req: Request, res: Response): Promise<void> => {
   if (process.env.NODE_ENV === 'test') {
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: 'TaskFlow API is healthy',
       data: {
@@ -17,6 +17,7 @@ router.get('/health', async (_req: Request, res: Response) => {
         checks: { api: 'ok', database: 'skipped', redis: 'skipped', queue: 'skipped' },
       },
     });
+    return;
   }
 
   const checks: Record<string, string> = {
