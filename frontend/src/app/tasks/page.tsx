@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AppShell } from '@/components/AppShell';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -11,12 +11,21 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux';
 import { setFilters } from '@/features/tasks/taskFiltersSlice';
 import { taskApi } from '@/services/task.service';
 import { useTaskSocket } from '@/hooks/useTaskSocket';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 function TasksPage() {
   useTaskSocket();
   const dispatch = useAppDispatch();
   const filters = useAppSelector((s) => s.taskFilters);
   const [open, setOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const debouncedSearch = useDebouncedValue(searchInput, 400);
+
+  useEffect(() => {
+    if (debouncedSearch !== (filters.search || '')) {
+      dispatch(setFilters({ search: debouncedSearch }));
+    }
+  }, [debouncedSearch, dispatch, filters.search]);
 
   const queryFilters = useMemo(
     () => ({
@@ -51,8 +60,8 @@ function TasksPage() {
           <div className="filters" role="search">
             <input
               placeholder="Search title or description"
-              value={filters.search || ''}
-              onChange={(e) => dispatch(setFilters({ search: e.target.value }))}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Search tasks"
             />
             <select
@@ -100,7 +109,8 @@ function TasksPage() {
             <button
               type="button"
               className="btn"
-              onClick={() =>
+              onClick={() => {
+                setSearchInput('');
                 dispatch(
                   setFilters({
                     search: '',
@@ -110,14 +120,25 @@ function TasksPage() {
                     sortOrder: 'desc',
                     page: 1,
                   })
-                )
-              }
+                );
+              }}
             >
               Reset
             </button>
           </div>
 
-          {isLoading ? <p className="muted">Loading tasks…</p> : <TaskTable tasks={data?.items || []} />}
+          {isLoading ? (
+            <div aria-busy="true" aria-label="Loading tasks">
+              {[1, 2, 3, 4].map((row) => (
+                <div key={row} className="skeleton-row">
+                  <div className="skeleton" style={{ width: '55%' }} />
+                  <div className="skeleton" style={{ width: '30%' }} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <TaskTable tasks={data?.items || []} />
+          )}
 
           {data?.pagination && (
             <div className="pagination">
