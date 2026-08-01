@@ -368,17 +368,4 @@ Suggested outline:
 
 ---
 
-## Submission Checklist
-
-- [x] Public GitHub repository (push when ready)
-- [x] Comprehensive README
-- [ ] Video walkthrough link
-- [x] Postman collection
-- [x] Docker + docker-compose
-- [x] `.env.example`
-- [x] Database migrations + seed
-- [x] CI workflow (bonus)
-
----
-
 Built for Saarthi AI Private Limited — MERN Stack Developer Technical Assessment.
