@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { FormEvent, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -10,7 +11,8 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PriorityBadge, StatusBadge } from '@/components/Badges';
 import { taskApi } from '@/services/task.service';
 import { useTaskSocket } from '@/hooks/useTaskSocket';
-import { useState } from 'react';
+import type { TaskPriority } from '@/types';
+import { getApiErrorMessage } from '@/lib/errors';
 
 function TaskDetailPage() {
   useTaskSocket();
@@ -18,11 +20,27 @@ function TaskDetailPage() {
   const id = params.id;
   const queryClient = useQueryClient();
   const [scheduleValue, setScheduleValue] = useState('');
+  const [editError, setEditError] = useState('');
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    priority: 'MEDIUM' as TaskPriority,
+  });
 
   const { data: task, isLoading } = useQuery({
     queryKey: ['task', id],
     queryFn: () => taskApi.getById(id),
   });
+
+  useEffect(() => {
+    if (task) {
+      setEditForm({
+        title: task.title,
+        description: task.description || '',
+        priority: task.priority,
+      });
+    }
+  }, [task]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['task', id] });
@@ -40,6 +58,27 @@ function TaskDetailPage() {
     onSuccess: invalidate,
   });
 
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      taskApi.update(id, {
+        title: editForm.title,
+        description: editForm.description || null,
+        priority: editForm.priority,
+      }),
+    onSuccess: () => {
+      setEditError('');
+      invalidate();
+    },
+    onError: (err) => setEditError(getApiErrorMessage(err, 'Failed to update task')),
+  });
+
+  const onUpdate = (e: FormEvent) => {
+    e.preventDefault();
+    updateMutation.mutate();
+  };
+
+  const canEdit = task && task.status !== 'PROCESSING';
+
   return (
     <ProtectedRoute>
       <AppShell>
@@ -49,7 +88,7 @@ function TaskDetailPage() {
               <Link href="/tasks">← Back to tasks</Link>
             </p>
             <h1>{task?.title || 'Task details'}</h1>
-            <p>Track execution history, attachments, and queue outcomes.</p>
+            <p>Track execution history, update details, and manage queue outcomes.</p>
           </div>
           {task?.status === 'FAILED' && (
             <button
@@ -84,35 +123,38 @@ function TaskDetailPage() {
                     {task.retries} / {task.maxRetries}
                   </strong>
                 </div>
-                <div>
-                  <span className="muted">Created</span>
-                  <strong>{format(new Date(task.createdAt), 'PPp')}</strong>
-                </div>
-                <div>
-                  <span className="muted">Started</span>
-                  <strong>
-                    {task.startedAt ? format(new Date(task.startedAt), 'PPp') : '—'}
-                  </strong>
-                </div>
-                <div>
-                  <span className="muted">Completed</span>
-                  <strong>
-                    {task.completedAt ? format(new Date(task.completedAt), 'PPp') : '—'}
-                  </strong>
-                </div>
-                <div>
-                  <span className="muted">Scheduled</span>
-                  <strong>
-                    {task.scheduledAt ? format(new Date(task.scheduledAt), 'PPp') : '—'}
-                  </strong>
-                </div>
               </div>
-              {task.description && (
-                <>
-                  <h2 style={{ marginTop: '1.2rem' }}>Description</h2>
-                  <p className="muted">{task.description}</p>
-                </>
-              )}
+
+              <h2 style={{ marginTop: '1.2rem' }}>Task History</h2>
+              <ol className="timeline" aria-label="Task status history">
+                <li>
+                  <strong>Created</strong>
+                  <span className="muted">{format(new Date(task.createdAt), 'PPp')}</span>
+                </li>
+                {task.scheduledAt && (
+                  <li>
+                    <strong>Scheduled</strong>
+                    <span className="muted">{format(new Date(task.scheduledAt), 'PPp')}</span>
+                  </li>
+                )}
+                {task.startedAt && (
+                  <li>
+                    <strong>Processing started</strong>
+                    <span className="muted">{format(new Date(task.startedAt), 'PPp')}</span>
+                  </li>
+                )}
+                {task.completedAt && (
+                  <li>
+                    <strong>{task.status === 'FAILED' ? 'Failed' : 'Completed'}</strong>
+                    <span className="muted">{format(new Date(task.completedAt), 'PPp')}</span>
+                  </li>
+                )}
+                <li>
+                  <strong>Last updated</strong>
+                  <span className="muted">{format(new Date(task.updatedAt), 'PPp')}</span>
+                </li>
+              </ol>
+
               {task.error && (
                 <>
                   <h2 style={{ marginTop: '1.2rem' }}>Error</h2>
@@ -132,6 +174,57 @@ function TaskDetailPage() {
                   </a>
                 </>
               )}
+
+              <h2 style={{ marginTop: '1.4rem' }}>Update Task</h2>
+              <form className="form" onSubmit={onUpdate}>
+                <label>
+                  Title
+                  <input
+                    required
+                    value={editForm.title}
+                    disabled={!canEdit}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Description
+                  <textarea
+                    rows={3}
+                    value={editForm.description}
+                    disabled={!canEdit}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Priority
+                  <select
+                    value={editForm.priority}
+                    disabled={!canEdit}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, priority: e.target.value as TaskPriority })
+                    }
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                </label>
+                {editError && (
+                  <p className="form-error" role="alert">
+                    {editError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={!canEdit || updateMutation.isPending}
+                >
+                  {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+                </button>
+                {!canEdit && (
+                  <p className="field-hint">Cannot edit a task while it is processing.</p>
+                )}
+              </form>
             </section>
 
             <section className="panel">

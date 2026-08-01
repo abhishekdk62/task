@@ -6,6 +6,12 @@ Users can register/login, create tasks, queue them in Redis via BullMQ, process 
 
 ---
 
+## Project Overview
+
+TaskFlow is a production-minded micro SaaS module for task automation and asynchronous job processing. Users register and log in, create/queue tasks, track status history, upload files, and receive live Socket.IO updates while BullMQ workers process jobs in the background.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -199,6 +205,12 @@ Centralized response shape:
 | POST | `/auth/refresh` | No | Rotate tokens |
 | POST | `/auth/logout` | Yes | Invalidate refresh token + Redis session |
 | GET | `/auth/me` | Yes | Current profile |
+
+### Admin (RBAC)
+
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/admin/users` | Admin only | List users (`authorize(ADMIN)` middleware) |
 
 ### Tasks
 
