@@ -10,6 +10,7 @@ import clsx from 'clsx';
 const links = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/tasks', label: 'Tasks' },
+  { href: '/admin/users', label: 'Admin', adminOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -28,6 +29,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.replace('/login');
   };
 
+  const visibleLinks = links.filter((link) => !link.adminOnly || user?.role === 'ADMIN');
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -36,7 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>TaskFlow</span>
         </Link>
         <nav className="nav" aria-label="Primary">
-          {links.map((link) => (
+          {visibleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
