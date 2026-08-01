@@ -330,6 +330,31 @@ Suggested outline:
 
 ---
 
+## Submission Checklist
+
+- [x] Public GitHub Repository
+- [x] README Documentation
+- [ ] Video Walkthrough (add Loom/Drive link below)
+- [ ] Live Demo (Optional)
+- [x] Postman Collection
+- [x] Docker Configuration
+- [x] Environment Variables (`.env.example`)
+- [x] Database Migration Files
+
+> **Video link:** _Add your Loom / Google Drive URL after recording_
+
+## Recent product polish
+
+- Deep `/health` checks for Postgres, Redis, and BullMQ
+- Request ID middleware (`X-Request-Id`)
+- Realtime toast notifications on task status changes
+- Debounced search + skeleton loaders
+- Admin users page demonstrating `authorize(ADMIN)` RBAC
+- Expanded Jest coverage for validators and response helpers
+- Empty-state UX for first-time task creation
+
+---
+
 ## Future Improvements
 
 - Redis adapter for multi-instance Socket.IO
