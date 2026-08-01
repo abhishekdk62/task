@@ -8,6 +8,9 @@ uploads/*
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
 *.log
 .DS_Store
 Thumbs.db
