@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { makeStore, AppStore } from '@/store';
 import { AuthHydrator } from '@/components/AuthHydrator';
+import { ToastProvider } from '@/components/ToastProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null);
@@ -28,8 +29,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={storeRef.current}>
       <QueryClientProvider client={queryRef.current}>
-        <AuthHydrator />
-        {children}
+        <ToastProvider>
+          <AuthHydrator />
+          {children}
+        </ToastProvider>
       </QueryClientProvider>
     </Provider>
   );
