@@ -137,7 +137,7 @@ function TasksPage() {
               ))}
             </div>
           ) : (
-            <TaskTable tasks={data?.items || []} />
+            <TaskTable tasks={data?.items || []} onCreate={() => setOpen(true)} />
           )}
 
           {data?.pagination && (

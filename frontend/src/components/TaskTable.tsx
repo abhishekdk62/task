@@ -5,9 +5,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { PriorityBadge, StatusBadge } from '@/components/Badges';
 import { taskApi } from '@/services/task.service';
+import { EmptyState } from '@/components/EmptyState';
 import type { Task } from '@/types';
 
-export function TaskTable({ tasks }: { tasks: Task[] }) {
+export function TaskTable({
+  tasks,
+  onCreate,
+}: {
+  tasks: Task[];
+  onCreate?: () => void;
+}) {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
@@ -26,7 +33,19 @@ export function TaskTable({ tasks }: { tasks: Task[] }) {
   });
 
   if (!tasks.length) {
-    return <p className="empty">No tasks found. Create one to start the queue.</p>;
+    return (
+      <EmptyState
+        title="No tasks yet"
+        description="Create a task to push work into the Redis queue and watch live status updates."
+        action={
+          onCreate ? (
+            <button type="button" className="btn btn-primary" onClick={onCreate}>
+              Create your first task
+            </button>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
