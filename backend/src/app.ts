@@ -10,12 +10,14 @@ import { logger } from './config/logger';
 import routes from './routes';
 import { apiRateLimiter } from './middleware/rateLimit.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { requestIdMiddleware } from './middleware/requestId.middleware';
 
 export const createApp = () => {
   const app = express();
 
   app.set('trust proxy', 1);
 
+  app.use(requestIdMiddleware);
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
